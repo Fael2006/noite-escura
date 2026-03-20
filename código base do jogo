@@ -1,0 +1,644 @@
+// See https://aka.ms/new-console-template for more information
+using System;
+using System.ComponentModel.Design;
+using System.Diagnostics;
+using System.Security.Authentication.ExtendedProtection;
+using System.Security.Cryptography.X509Certificates;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using System.Linq;
+
+abstract class itens
+{
+    public string Nome { get; set; }
+    public int Valor { get; set; }
+    public abstract void Usaritem(classe jogador);
+}
+class poçao_de_cura : itens
+{
+    public poçao_de_cura()
+    {
+        Nome = "poçao de cura";
+        Valor = 123;
+    }
+    public override void Usaritem(classe jogador)
+    {
+        jogador.Vida += 30;
+        Console.WriteLine("voce curou 30 de vida");
+    }
+}
+
+public abstract class Condiçoes
+{
+    public string Nome { get; set; }
+    public int Dano { get; set; }
+    public int turnosrest { get; set; }
+    public Condiçoes(int turnos)
+    {
+        turnosrest = turnos;
+    }
+    public abstract void Aoaplicar(Personagem alvo);
+    public abstract void Aoturno(Personagem alvo);
+    public abstract void Aoexpirar(Personagem alvo);
+
+
+}
+public class veneno : Condiçoes
+{
+    public veneno(int turnos) : base(turnos)
+    {
+        Nome = "Envenenado";
+        Dano = Random.Shared.Next(3,8);
+    }
+    public override void Aoaplicar(Personagem alvo)
+    {
+        Console.WriteLine($"{alvo.Nome} foi envenenado");
+        
+    }
+    public override void Aoturno(Personagem alvo)
+    {
+        alvo.Vida -= Dano;
+        Console.WriteLine($"{alvo.Nome} sofreu de {Dano} de dano de envenenamento");
+    }
+    public override void Aoexpirar(Personagem alvo)
+    {
+        Console.WriteLine($"o veneno em {alvo.Nome} ternimnou");
+    }
+}
+abstract class ataques
+{
+    
+    public string Nome { get; set; }
+    public int Dano { get; set; }
+    public int Cenergia { get; set;  }
+    public int Mana { get; set; }
+
+    public abstract void Executar(classe jogador, inimigo enimigo );
+}
+ class Ataquedeespada : ataques
+{
+    public Ataquedeespada()
+    {
+        Nome = "ataque de espada";
+        Dano = Random.Shared.Next(5,20);
+        Cenergia = 0;
+        Mana = 0;
+    }
+    public override void Executar(classe jogador, inimigo enimigo)
+    {
+        if (jogador.JogadaATK + 10 >= enimigo.CAE)
+        {
+            int Danofinal = Dano;
+            enimigo.Vida -= Danofinal;
+            Console.WriteLine($"{jogador.Nome} usou {Nome} e causou {Dano} de dano em {enimigo.Nome}");
+                            enimigo.AplicarCond(new veneno(4));
+
+        }
+
+    }
+}
+class atkescudada : ataques
+{
+    public atkescudada()
+    {
+        Nome = "Ataque de Escudo";
+        Dano = Random.Shared.Next(5,15);
+        Cenergia = 15;
+        Mana = 0;
+    }
+    public override void Executar(classe jogador, inimigo enimigo)
+    {
+        if (jogador.JogadaATK >= enimigo.CAE)
+        {
+            if (jogador.Enegia >= Cenergia)
+            {
+                jogador.Enegia -= Cenergia;
+                int Danofinal = Dano;
+                enimigo.Vida -= Danofinal;
+                Console.WriteLine($"{jogador.Nome} usou {Nome} e causou {Dano} de dano em {enimigo.Nome}");
+            }
+            else if (jogador.Enegia < Cenergia)
+            {
+                Console.WriteLine("---------------------------------");
+                Console.WriteLine(" voce nao tem energia suficiente ");
+                Console.WriteLine("---------------------------------");
+            }
+        }
+
+    }
+}
+class atkchute : ataques
+{
+    public atkchute()
+    {
+        Nome = "Chute";
+        Dano = Random.Shared.Next(5,20);
+        Cenergia = 10;
+        Mana = 0;
+    }
+    public override void Executar(classe jogador, inimigo enimigo)
+    {
+        if (jogador.JogadaATK >= enimigo.CAE)
+        {
+            if (jogador.Enegia >= Cenergia)
+            {
+                jogador.Enegia -= Cenergia;
+                int Danofinal = Dano;
+                enimigo.Vida -= Danofinal;
+                Console.WriteLine($"{jogador.Nome} usou {Nome} e causou {Dano} de dano em {enimigo.Nome}");
+            }
+            else if (jogador.Enegia < Cenergia)
+            {
+                Console.WriteLine("---------------------------------");
+                Console.WriteLine(" voce nao tem energia suficiente ");
+                Console.WriteLine("---------------------------------");
+            }
+        }
+
+    }
+}
+class Eatkfaca : ataques
+{
+     public Eatkfaca()
+    {
+        Nome = "ataque com a faca";
+        Dano = Random.Shared.Next(5, 13);
+        Cenergia = 0;
+        Mana = 0;
+    }
+    public override void Executar(classe jogador, inimigo enimigo)
+    {
+        if (enimigo.JogadaATK >= jogador.CA)
+        {
+            int Danofinal = Dano;
+            jogador.Vida -= Danofinal;
+            Console.WriteLine($"{enimigo.Nome} usou {Nome} e causou {Dano} de dano em {jogador.Nome}");
+        }
+    }
+}
+class Eatkcuspe : ataques
+{
+    public Eatkcuspe()
+    {
+        Nome = "cusparada";
+        Dano = Random.Shared.Next(3, 8);
+        Cenergia = 5;
+        Mana = 0;
+
+    }
+    public override void Executar(classe jogador, inimigo enimigo)
+    {
+        if (enimigo.JogadaATK +10 >= jogador.CA)
+        {
+            if (enimigo.Cenegia >= Cenergia)
+            {
+                enimigo.Cenegia -= Cenergia;
+                int Danofinal = Dano;
+                jogador.Vida -= Danofinal;
+                Console.WriteLine($"{enimigo.Nome} usou {Nome} e causou {Dano} de dano em {jogador.Nome}");
+                jogador.AplicarCond(new veneno(4));
+            }
+           
+        }
+    }
+}
+class Eatkrisada : ataques
+{
+    public Eatkrisada()
+    {
+        Nome = "Risada malefica";
+        Dano = Random.Shared.Next(5, 15);
+        Cenergia = 0;
+        Mana = 5;
+    }
+    public override void Executar(classe jogador, inimigo enimigo)
+    {
+        if (enimigo.JogadaATK >= jogador.CA)
+        {
+            if (enimigo.Mana >= Mana)
+            {
+                enimigo.Mana -= Mana;
+                int Danofinal = Dano;
+                jogador.Vida -= Danofinal;
+                Console.WriteLine($"{enimigo.Nome} usou {Nome} e causou {Dano} de dano em {jogador.Nome}");
+            }
+            
+        }
+       
+       
+    }
+}
+public abstract class Personagem
+{
+    public string Nome { get; set; }
+    public int Vida { get; set; }
+    public int Dano { get; set; }
+    public int Mana { get; set; }
+    public int Cenegia { get; set; }
+    
+    public List<Condiçoes> ListaCond = new List<Condiçoes>();
+
+    public void AplicarCond(Condiçoes condiçao)
+    {
+        condiçao.Aoaplicar(this);
+        ListaCond.Add(condiçao);
+    }
+
+    public void ProcessarCondiçoes()
+    {
+        for (int i = ListaCond.Count - 1; i >= 0; i--)
+        {
+            Condiçoes c = ListaCond[i];
+            c.Aoturno(this);
+            c.turnosrest--;
+
+            if (c.turnosrest <= 0)
+            {
+                c.Aoexpirar(this);
+                ListaCond.RemoveAt(i);
+            }
+
+        }
+    }
+}
+abstract class inimigo : Personagem
+{
+    
+    public int CAE { get; set;  }
+    public int JogadaATK { get; set; }
+    public string aparencia { get; set; }
+
+    public List<ataques> ElistaATK = new List<ataques>();
+    
+    public abstract void ATKale(classe jogador);
+
+    public abstract void Descricao();
+    
+}
+class Goblin : inimigo
+{
+    public Goblin()
+    {
+        Nome = "Goblin";
+        Vida = 100;
+        Dano = 5;
+        Mana = 5;
+        Cenegia = 10;
+        CAE = 13;
+        JogadaATK = Random.Shared.Next(1,20);
+        aparencia = " (   0   )   0   ) ";
+
+        ElistaATK.Add(new Eatkfaca());
+        ElistaATK.Add(new Eatkcuspe());
+        ElistaATK.Add(new Eatkrisada());
+        
+    }
+    public override void ATKale(classe jogador)
+    {
+        var ataquepossi = ElistaATK
+            .Where(h => Cenegia >= h.Cenergia && Mana >= h.Mana)
+            .ToList();
+        if ( ataquepossi.Count == 0)
+        {
+            ElistaATK[0].Executar(jogador, this);
+            return;
+        }
+
+        Random rnd = new Random();
+        int atkale = rnd.Next(ataquepossi.Count);
+        ataques escolhido = ataquepossi[atkale];
+        escolhido.Executar(jogador, this);
+        Thread.Sleep(2000);
+    }
+    public override void Descricao()
+    {
+        Console.WriteLine("Uma criatura verde feia e nariguda aparece, ele parece esta de olho no seu ouro");
+    }
+   
+    
+        
+    
+}
+abstract class classe : Personagem
+{
+    
+    
+    public int Enegia { get; set; }
+    
+    public int CA { get; set; }
+    public int JogadaATK { get; set; }
+    public abstract void descrever();
+    public abstract void eventos();
+
+    public List<ataques> ListaATK = new List<ataques>();
+
+    public List<itens> inventario = new List<itens>();
+    public abstract void Habilidades();
+
+    public virtual void Luz()
+    {
+        Console.WriteLine("voce nao sabe invocar luz");
+    }
+}
+class guerreiro : classe
+{
+    public guerreiro()
+    {
+        Nome = "guerreiro";
+        Vida = 100;
+        Enegia = 30;
+        CA = 15;
+        JogadaATK = Random.Shared.Next(1, 20);
+        ListaATK.Add(new Ataquedeespada());
+        ListaATK.Add(new atkchute());
+        ListaATK.Add(new atkescudada());
+    }
+
+    public void luz()
+    {
+
+    }
+    public override void descrever()
+    {
+        Console.WriteLine("voce agora protegera o mundo com a força e o fio de poderosa espada, 'nenhum mal pode lhe parar enquando a sua espada empunhar'");
+    }
+    public override void eventos()
+    {
+        Console.WriteLine("cortar a madeira com sua espada e acender um pedaço da madeira para criar uma tocha");
+    }
+    public override void Habilidades()
+    {
+    }
+   
+}
+class mago : classe
+{
+    public mago()
+    {
+        Nome = "mago";
+        Vida = 50;
+        Enegia = 30;
+        Mana = 40;
+        
+    }
+    
+    public override void descrever()
+    {
+        Console.WriteLine("voce agora protegera o mundo com sua inteligencia e o seus grandes feitiços moldaram o mal desse mundo, 'nao a nenhum conhecimento que nao possa ser adquirido'");
+    }
+    public override void eventos()
+    {
+        Console.WriteLine("Voce invoca uma esfera brilhante de luz iluminando toda a floresta, ela flutua em sua volta.");
+    }
+    public override void Luz()
+    {
+        Console.WriteLine("Voce invoca uma esfera brilhante de luz iluminando toda a floresta, ela flutua em sua volta.");
+    }
+    public override void Habilidades()
+    {
+
+    }
+
+
+}
+class arqueiro : classe
+{
+    public arqueiro()
+    {
+        Nome = "arqueiro";
+
+    }
+    public override void descrever()
+    {
+        Console.WriteLine("sua mira impecavei ira por fim a cada criatura montros ou espirito desse mundo, sempre esteja firme");
+    }
+    public override void eventos()
+    {
+        Console.WriteLine("voce passa um oleo em uma das suas flechas e acende com uma perneira");
+    }
+    public override void Habilidades()
+    {
+
+    }
+}
+
+
+class Program
+{
+    
+    static void Main()
+    {
+        Menu();
+
+        
+    }
+    static void Menu( )
+    {
+        Console.WriteLine("--------------------------------------------------------------------------------------------------------------------------------");
+        Console.WriteLine("\n\n\n                                               noite escura                                                         \n\n\n");
+        Console.WriteLine("--------------------------------------------------------------------------------------------------------------------------------");
+        Console.WriteLine("escolhas: ");
+        Console.WriteLine("1. jogar ");
+        Console.WriteLine("2. sair  ");
+
+        String escolha = Console.ReadLine();
+        if (escolha == "1")
+        {
+            Console.Clear();
+            classe jogador = Menu_classe();
+            Cena1(jogador);
+        }
+        else if (escolha == "2")
+        {
+            Console.Clear();
+            Environment.Exit(0);
+        }
+        else
+        {
+
+            Console.WriteLine("opçao invalida");
+            Console.ReadKey();
+            Console.Clear();
+            Menu();
+        }
+
+    }
+    static classe Menu_classe()
+    {
+        Console.WriteLine("--------------------------------------------------------------------------------------------------------------------------------");
+        Console.WriteLine("                      |                 0                             -|                                                        ");
+        Console.WriteLine("                      |                 |                            ---|-->                                                    ");
+        Console.WriteLine("                      T                 |                             -|                                                        ");
+        Console.WriteLine("--------------------------------------------------------------------------------------------------------------------------------");
+        Console.WriteLine("escolha:");
+        Console.WriteLine("1. Guerreiro");
+        Console.WriteLine("2. Mago");
+        Console.WriteLine("3. Arqueiro");
+        
+        int escolha = int.Parse(Console.ReadLine());
+        Console.Clear();
+        switch (escolha)
+        {
+            case 1: return new guerreiro(); 
+            case 2: return new mago();
+            case 3: return new arqueiro();
+            default: Console.WriteLine("opção invalida"); return Menu_classe();
+        }
+        
+
+    }
+
+    static void Combate(classe jogador, inimigo enimigo)
+    {
+        Console.Clear();
+        Console.WriteLine("--------------------------------------------------------------------------------------------------------------------------------");
+        Console.WriteLine($"\n\n\n                                      Um {enimigo.Nome} aparece, se prepare                                                  \n\n\n");
+        Console.WriteLine("--------------------------------------------------------------------------------------------------------------------------------");
+        Thread.Sleep(2000);
+        Console.Clear();
+
+        while (jogador.Vida > 0 && enimigo.Vida > 0)
+        {
+            enimigo.ProcessarCondiçoes();
+            jogador.ProcessarCondiçoes();
+            Console.WriteLine("--------------------------------------------------------------------------------------------------------------------------------");
+            Console.WriteLine($"\n\n\n                                               {enimigo.aparencia}                                                 \n\n\n");
+            Console.WriteLine("--------------------------------------------------------------------------------------------------------------------------------");
+            Console.WriteLine("--------------------------------------------------------------------------------------------------------\n 1. Ataques                     2. Itens             \n ----------------------------------------------------------------------------------------------- ");
+            int escolha = int.Parse(Console.ReadLine());
+
+            if (escolha == 1)
+            {
+                Console.Clear();
+                Console.WriteLine("--------------------------------------------------------------------------------------------------------------------------------");
+                Console.WriteLine($"\n\n                                                Vida: {enimigo.Vida}                                                            \n                                               {enimigo.aparencia}                                                 \n\n\n");
+                Console.WriteLine("--------------------------------------------------------------------------------------------------------------------------------");
+                Console.WriteLine($"Sua vida: {jogador.Vida} ");
+
+                Console.WriteLine("escolhas: ");
+                for (int i = 0; i < jogador.ListaATK.Count; i++)
+                {
+                    Console.WriteLine($"{i + 1}. {jogador.ListaATK[i].Nome}");
+
+                }
+                int opçoes = int.Parse(Console.ReadLine());
+
+                if (opçoes > 0 && opçoes <= jogador.ListaATK.Count)
+                {
+
+                    jogador.ListaATK[opçoes - 1].Executar(jogador, enimigo);
+
+                }
+
+                Thread.Sleep(2000);
+            }
+            else if (escolha == 2)
+            {
+                for (int i = 0; i < jogador.inventario.Count; i++)
+                {
+                    Console.WriteLine($"{i + 1}. {jogador.inventario[i].Nome}");
+                }
+                int opçao = int.Parse(Console.ReadLine());
+                if (opçao > 0 && opçao <= jogador.inventario.Count)
+                {
+                    jogador.inventario[opçao - 1].Usaritem(jogador);
+
+                }
+                
+
+            }
+            if (enimigo.Vida <= 0)
+            {
+                Console.Clear();
+                Console.WriteLine("--------------------------------------------------------------------------------------------------------------------------------");
+                Console.WriteLine($"\n\n\n                                    {enimigo.Nome} foi derrotado,Parabens                                          \n\n\n");
+                Console.WriteLine("--------------------------------------------------------------------------------------------------------------------------------");
+                break;
+            }
+            if (jogador.Vida <= 0)
+            {
+                Console.Clear();
+                Console.WriteLine("--------------------------------------------------------------------------------------------------------------------------------");
+                Console.WriteLine($"\n\n\n                                         voce perdeu                                                               \n\n\n");
+                Console.WriteLine("--------------------------------------------------------------------------------------------------------------------------------");
+                break;
+            }
+
+            Console.WriteLine("Turno do inimigo");
+
+            enimigo.ATKale(jogador);
+
+            Console.Clear();
+        }
+    }
+   
+    static void Cena1(classe jogador)
+    {
+        
+        Console.WriteLine("--------------------------------------------------------------------------------------------------------------------------------");
+        Console.WriteLine("\n\n\n  Voce acorda em uma floresta escura. voce nao se lembra como veio parar aqui mais sente que tem que sair logo dessa floresta   \n\n\n");
+        Console.WriteLine("--------------------------------------------------------------------------------------------------------------------------------");
+      
+        Thread.Sleep(3000);
+        Console.Clear();
+        Console.WriteLine("--------------------------------------------------------------------------------------------------------------------------------");
+        Console.WriteLine("\n\n\n  esta tudo muito escuro voce precisa arranjar um jeito que clarear o esse lugar.   \n\n\n");
+        Console.WriteLine("--------------------------------------------------------------------------------------------------------------------------------");
+        Console.WriteLine("opçao: ");
+        Console.WriteLine("1. acender uma tocha.(o combate pode ser mais dificil)  ");
+        Console.WriteLine("2. Seguir o caminho na direçao da lua. "); 
+
+        if (jogador is mago)
+        {
+            Console.WriteLine("3. invocar luz");
+        }
+
+        int escolha = int.Parse(Console.ReadLine());
+        if (escolha == 1)
+        {
+            Console.Clear();
+            cena2(jogador);
+            
+        }
+        else if (escolha == 2)
+        {
+            Console.Clear();
+            
+        }
+            Console.ReadKey();
+        
+        
+    }
+    static void cena2(classe jogador)
+    {
+        Console.WriteLine("--------------------------------------------------------------------------------------------------------------------------------");
+        Console.WriteLine("\n\n\n  A floresta se ilumina mostrando dois caminhos, o primeiro com rastros de pegadas de um animal.e o um rastro de uma carroça qual voce escolhe   \n\n\n");
+        Console.WriteLine("--------------------------------------------------------------------------------------------------------------------------------");
+        Console.WriteLine("opçao: ");
+        Console.WriteLine("1. Caminho das pegadas ");
+        Console.WriteLine("2. Caminho das marcas de carroça ");
+        int escolha = int.Parse(Console.ReadLine());
+        if (escolha == 1)
+        {
+            Console.Clear();
+            cenaB1(jogador);
+        }
+        else if ( escolha == 2)
+        {
+            cenaA1(jogador);
+        }
+    }
+    static void cenaB1(classe jogador )
+    {
+        Console.WriteLine("voce recebe uma poçao de cura");
+        jogador.inventario.Add(new poçao_de_cura());
+        inimigo goblin = new Goblin();
+
+        Combate(jogador,goblin);
+    }
+    static void cenaA1(classe jogador)
+    {
+
+    }
+
+}
